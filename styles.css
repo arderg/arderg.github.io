@@ -3,12 +3,14 @@ body {
   margin: 0;
   padding: 0;
   transition: background-color 0.5s ease, color 0.5s ease;
+  position: relative;
 }
 
 h1 {
   font-size: 3em;
   color: #333;
   position: relative;
+  z-index: 2;
 }
 
 h2 {
@@ -17,10 +19,6 @@ h2 {
 
 .container {
   max-width: 960px;
-}
-
-section {
-  padding: 50px 0;
 }
 
 p, ul {
@@ -43,12 +41,12 @@ ul {
   font-size: 1.2em;
 }
 
-/* Ribbon styling */
+/* Ribbon Layer */
 .ribbon-container {
   position: absolute;
+  top: 100px; /* Adjust as needed to move the ribbons behind the text */
   width: 100%;
-  top: 300px; /* Moves the ribbons lower down */
-  z-index: 1; /* Behind the text */
+  z-index: 1;
   pointer-events: none; /* Prevent interaction */
 }
 
@@ -56,7 +54,13 @@ ul {
   width: 100%;
   height: 200px;
   position: absolute;
-  z-index: 1; /* Behind the text */
+  z-index: 1;
+}
+
+/* Content Layer */
+.content-layer {
+  position: relative;
+  z-index: 2; /* Ensure text sits above the ribbons */
 }
 
 /* Dark and Light Modes */
