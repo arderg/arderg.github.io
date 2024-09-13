@@ -34,6 +34,7 @@ ul {
   padding: 30px;
   border-radius: 8px;
   text-align: center;
+  background-color: #f8f9fa; /* Default light mode color */
 }
 
 /* Ribbon Layer */
@@ -72,18 +73,25 @@ ul {
   color: #ffffff;
 }
 
-.light-mode {
-  background-color: #ffffff;
-  color: #000000;
-}
-
-/* Adjust dark mode styles */
-.dark-mode h1, .dark-mode h2, .dark-mode p {
+/* Dark mode for headings and paragraphs */
+.dark-mode h1 {
   color: #ffffff;
 }
 
+.dark-mode h2 {
+  color: #80bfff; /* Light blue color for h2 in dark mode */
+}
+
+.dark-mode p, .dark-mode ul {
+  color: #e0e0e0; /* Light gray for text in dark mode */
+}
+
 .dark-mode #contact {
-  background-color: #333333;
+  background-color: #333333; /* Darker background for contact section */
+}
+
+.dark-mode #contact p {
+  color: #e0e0e0; /* Light gray for contact text */
 }
 
 /* Smooth transition for dark/light mode */

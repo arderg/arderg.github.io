@@ -1,20 +1,14 @@
-// Select the body
-const body = document.getElementById('mainBody');
+document.addEventListener('DOMContentLoaded', () => {
+  const mainBody = document.getElementById('mainBody');
 
-// Set initial mode (light by default)
-let isDarkMode = false;
-
-// Add event listener for double-click to toggle dark and light modes
-body.addEventListener('dblclick', () => {
-  isDarkMode = !isDarkMode;
-  if (isDarkMode) {
-    body.classList.remove('light-mode');
-    body.classList.add('dark-mode');
-  } else {
-    body.classList.remove('dark-mode');
-    body.classList.add('light-mode');
-  }
+  // Toggle dark mode on double-click
+  mainBody.addEventListener('dblclick', () => {
+    if (mainBody.classList.contains('dark-mode')) {
+      mainBody.classList.remove('dark-mode');
+      mainBody.classList.add('light-mode');
+    } else {
+      mainBody.classList.remove('light-mode');
+      mainBody.classList.add('dark-mode');
+    }
+  });
 });
-
-// Initialize in light mode
-body.classList.add('light-mode');
