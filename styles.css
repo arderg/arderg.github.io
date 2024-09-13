@@ -9,7 +9,6 @@ h1 {
   font-size: 3em;
   color: #333;
   position: relative;
-  z-index: 1;
 }
 
 h2 {
@@ -44,14 +43,23 @@ ul {
   font-size: 1.2em;
 }
 
-.ribbon {
+/* Ribbon styling */
+.ribbon-container {
   position: absolute;
-  top: 0;
   width: 100%;
-  height: 100px;
-  z-index: 0;
+  top: 300px; /* Moves the ribbons lower down */
+  z-index: 1; /* Behind the text */
+  pointer-events: none; /* Prevent interaction */
 }
 
+.ribbon {
+  width: 100%;
+  height: 200px;
+  position: absolute;
+  z-index: 1; /* Behind the text */
+}
+
+/* Dark and Light Modes */
 .dark-mode {
   background-color: #121212;
   color: #ffffff;
@@ -60,4 +68,9 @@ ul {
 .light-mode {
   background-color: #ffffff;
   color: #000000;
+}
+
+/* Smooth transition for dark/light mode */
+body {
+  transition: background-color 0.3s, color 0.3s;
 }

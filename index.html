@@ -8,24 +8,27 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body id="mainBody">
-  <!-- Wavy Ribbons -->
-  <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
-    <path d="M0,100 C300,200 900,0 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.5)"></path>
-  </svg>
-  <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
-    <path d="M0,150 C400,100 800,200 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.7)"></path>
-  </svg>
 
   <!-- Title Section -->
   <section class="text-center my-5">
     <h1>Math and Informatics Lessons</h1>
   </section>
 
-  <!-- Content Section -->
+  <!-- Ribbons moved to be behind the text -->
+  <div class="ribbon-container">
+    <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
+      <path d="M0,100 C300,200 900,0 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.5)"></path>
+    </svg>
+    <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
+      <path d="M0,150 C400,100 800,200 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.7)"></path>
+    </svg>
+  </div>
+
+  <!-- Content Section with overlapping text -->
   <section class="container">
-    <div class="row">
+    <div class="row position-relative" style="z-index: 2;">
       <!-- Left Text Block: About You -->
-      <div class="col-md-6 my-3">
+      <div class="col-md-6 my-5">
         <h2>About Me</h2>
         <p>Hi! I'm [Your Name], currently studying [Your University]. I have been passionate about teaching and helping students excel in their baccalaureate exams. Here are a few of my accomplishments:</p>
         <ul>
@@ -36,7 +39,7 @@
       </div>
 
       <!-- Right Text Block: Services -->
-      <div class="col-md-6 my-3">
+      <div class="col-md-6 my-5">
         <h2>Services I Offer</h2>
         <p>I provide expert tutoring in:</p>
         <ul>
