@@ -7,44 +7,52 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body id="mainBody">
+  <!-- Wavy Ribbons -->
+  <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
+    <path d="M0,100 C300,200 900,0 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.5)"></path>
+  </svg>
+  <svg class="ribbon" viewBox="0 0 1200 200" preserveAspectRatio="none">
+    <path d="M0,150 C400,100 800,200 1200,100 L1200,0 L0,0 Z" fill="rgba(0, 102, 255, 0.7)"></path>
+  </svg>
+
   <!-- Title Section -->
-  <header class="container text-center my-5">
+  <section class="text-center my-5">
     <h1>Math and Informatics Lessons</h1>
-  </header>
+  </section>
 
-  <!-- Two Text Blocks Section -->
-  <section class="container my-5 d-flex justify-content-between">
-    <!-- Left Text Block -->
-    <div class="left-block col-md-6">
-      <h2>About Me</h2>
-      <p>Hi! I'm [Your Name], a passionate tutor currently studying at [Your University]. I specialize in helping high school students prepare for their baccalaureate exams in Math and Informatics.</p>
-      <h3>My Accomplishments:</h3>
-      <ul>
-        <li>Gold Medal, National Math Olympiad</li>
-        <li>Silver Medal, National Informatics Olympiad</li>
-        <li>University Honors - Top 10%</li>
-      </ul>
-    </div>
+  <!-- Content Section -->
+  <section class="container">
+    <div class="row">
+      <!-- Left Text Block: About You -->
+      <div class="col-md-6 my-3">
+        <h2>About Me</h2>
+        <p>Hi! I'm [Your Name], currently studying [Your University]. I have been passionate about teaching and helping students excel in their baccalaureate exams. Here are a few of my accomplishments:</p>
+        <ul>
+          <li>Gold Medal, National Math Olympiad</li>
+          <li>Silver Medal, National Informatics Olympiad</li>
+          <li>University Honors - Top 10%</li>
+        </ul>
+      </div>
 
-    <!-- Right Text Block -->
-    <div class="right-block col-md-5">
-      <h2>Services I Offer</h2>
-      <p>I provide personalized lessons in:</p>
-      <ul>
-        <li>Math for Baccalaureate Preparation</li>
-        <li>Informatics for Baccalaureate Preparation</li>
-        <li>Olympiad Training in Math and Informatics</li>
-      </ul>
-      <a href="#contact" class="btn btn-primary">Contact Me</a>
+      <!-- Right Text Block: Services -->
+      <div class="col-md-6 my-3">
+        <h2>Services I Offer</h2>
+        <p>I provide expert tutoring in:</p>
+        <ul>
+          <li>Math for Baccalaureate Exams</li>
+          <li>Informatics for Baccalaureate and Olympiads</li>
+        </ul>
+        <a href="#contact" class="btn btn-primary mt-3">Contact Me</a>
+      </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class="container text-center my-5">
-    <h2>Contact Me</h2>
-    <p>You can reach me via:</p>
-    <p><strong>WhatsApp:</strong> +123456789</p>
+  <section id="contact" class="container my-5">
+    <h2>Contact Info</h2>
+    <p>Feel free to reach out via WhatsApp or email for any inquiries or to schedule lessons.</p>
+    <p><strong>WhatsApp:</strong> +123 456 7890</p>
     <p><strong>Email:</strong> your-email@example.com</p>
   </section>
 
