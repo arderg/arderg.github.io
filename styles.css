@@ -1,23 +1,48 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .hero {
-    background: linear-gradient(to right, #0066ff, #66ccff);
-    color: white;
-    text-align: center;
-    padding: 100px 0;
-  }
-  
-  #achievements {
-    text-align: center;
-  }
-  
-  #contact {
-    background-color: #f8f9fa;
-    padding: 50px;
-    border-radius: 10px;
-  }
-  
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  color: #0066ff;
+}
+
+header {
+  background-color: #f0f8ff;
+  padding: 20px 0;
+}
+
+.left-block, .right-block {
+  padding: 20px;
+}
+
+.left-block {
+  background-color: #e6f7ff;
+  border-radius: 8px;
+}
+
+.right-block {
+  background-color: #d9f2e6;
+  border-radius: 8px;
+}
+
+ul {
+  list-style-type: square;
+}
+
+#contact {
+  background-color: #f8f9fa;
+  padding: 50px;
+  border-radius: 10px;
+}
+
+.btn-primary {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-primary:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
