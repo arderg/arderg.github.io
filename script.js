@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('contactButton').addEventListener('click', function(event) {
   event.preventDefault(); // Prevent default behavior of the link
   
+  console.log("Button clicked!");
+
   const contactSection = document.getElementById('contact');
   
   // Scroll smoothly to the contact section
