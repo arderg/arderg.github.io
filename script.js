@@ -13,7 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-document.querySelector('.btn-primary').addEventListener('click', function() {
+document.getElementById('contactButton').addEventListener('click', function(event) {
+  event.preventDefault(); // Prevent default behavior of the link
+  
   const contactSection = document.getElementById('contact');
   
   // Scroll smoothly to the contact section
