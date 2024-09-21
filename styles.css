@@ -9,8 +9,6 @@ body {
 h1 {
   font-size: 3em;
   color: #333;
-  position: relative;
-  z-index: 2;
 }
 
 h2 {
@@ -37,34 +35,9 @@ ul {
   background-color: #f8f9fa; /* Default light mode color */
 }
 
-/* Ribbon Layer */
-.ribbon-container {
-  position: absolute;
-  top: 200px; /* Adjust as needed */
-  left: 0;
-  width: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.ribbon {
-  width: 100%;
-  height: 200px;
-  position: absolute;
-}
-
-.ribbon:nth-of-type(1) {
-  top: 0;
-}
-
-.ribbon:nth-of-type(2) {
-  top: 100px;
-}
-
 /* Content Layer */
 .content-layer {
   position: relative;
-  z-index: 2;
 }
 
 /* Dark and Light Modes */
@@ -105,7 +78,6 @@ body {
   transition: background-color 1s ease-out; /* Smooth transition */
 }
 
-/* Ensure the background returns to normal */
 #contact {
   transition: background-color 1s ease-out;
 }
