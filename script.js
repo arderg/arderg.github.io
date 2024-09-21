@@ -12,3 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+document.querySelector('.btn-primary').addEventListener('click', function() {
+  const contactSection = document.getElementById('contact');
+  
+  // Scroll smoothly to the contact section
+  contactSection.scrollIntoView({ behavior: 'smooth' });
+  
+  // Add the highlight class
+  contactSection.classList.add('highlight');
+
+  // Remove the highlight class after 2 seconds
+  setTimeout(function() {
+    contactSection.classList.remove('highlight');
+  }, 2000);
+});
