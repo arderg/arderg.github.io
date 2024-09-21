@@ -36,9 +36,21 @@ ul {
   transition: background-color 0.3s; /* Add transition for smooth effect */
 }
 
-#contact.highlight {
-  background-color: rgba(255, 255, 0, 0.3); /* Highlight color */
-  /* Optional: Ensure the highlight shows above existing styles */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 0, 0.5); /* Highlight color */
+  opacity: 0; /* Start as invisible */
+  transition: opacity 0.5s ease; /* Smooth transition */
+  z-index: 1; /* Ensure it sits above the background */
+}
+
+/* To show the overlay */
+.overlay.visible {
+  opacity: 1; /* Fully visible */
 }
 
 /* Content Layer */
