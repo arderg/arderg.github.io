@@ -33,6 +33,12 @@ ul {
   border-radius: 8px;
   text-align: center;
   background-color: #f8f9fa; /* Default light mode color */
+  transition: background-color 0.3s; /* Add transition for smooth effect */
+}
+
+#contact.highlight {
+  background-color: rgba(255, 255, 0, 0.3); /* Highlight color */
+  /* Optional: Ensure the highlight shows above existing styles */
 }
 
 /* Content Layer */
