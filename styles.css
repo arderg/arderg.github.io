@@ -29,31 +29,30 @@ ul {
 }
 
 #contact {
-  position: relative; /* Positioning context for overlay */
   padding: 30px;
-  border-radius: 8px; /* Rounded corners */
+  border-radius: 8px;
   text-align: center;
   background-color: #f8f9fa; /* Default light mode color */
+  transition: background-color 0.3s; /* Add transition for smooth effect */
   overflow: hidden; /* Prevent overflow of overlay */
 }
 
-#contact:before {
-  content: '';
+.overlay {
   position: absolute;
-  top: -5px; /* Adjust as needed for spacing */
-  left: -5px; /* Adjust as needed for spacing */
-  right: -5px; /* Adjust as needed for spacing */
-  bottom: -5px; /* Adjust as needed for spacing */
-  border-radius: 8px; /* Match the border radius */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(255, 255, 0, 0.5); /* Highlight color */
   opacity: 0; /* Start as invisible */
   transition: opacity 0.5s ease; /* Smooth transition */
   z-index: 1; /* Ensure it sits above the background */
+  border-radius: 8px; /* Match the border radius of the contact section */
 }
 
 /* To show the overlay */
-.highlight:before {
-  opacity: 1; /* Fully visible on highlight */
+.overlay.visible {
+  opacity: 1; /* Fully visible */
 }
 
 /* Content Layer */

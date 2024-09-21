@@ -17,15 +17,16 @@ document.getElementById('contactButton').addEventListener('click', function(even
   event.preventDefault(); // Prevent default behavior of the link
 
   const contactSection = document.getElementById('contact');
+  const overlay = contactSection.querySelector('.overlay');
 
   // Scroll smoothly to the contact section
   contactSection.scrollIntoView({ behavior: 'smooth' });
 
-  // Add the highlight class
-  contactSection.classList.add('highlight');
+  // Show the overlay
+  overlay.classList.add('visible');
 
-  // Remove the highlight class after 2 seconds
+  // Hide the overlay after 2 seconds
   setTimeout(function() {
-      contactSection.classList.remove('highlight');
+      overlay.classList.remove('visible');
   }, 2000);
 });
