@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini Wordle</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin-top: 50px; }
+    #grid { display: grid; grid-template-rows: repeat(6, 1fr); grid-gap: 5px; }
+    .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; }
+    .cell { width: 60px; height: 60px; border: 2px solid #ccc; display: flex; justify-content: center; align-items: center; font-size: 2rem; text-transform: uppercase; }
+    .cell.filled { border-color: #999; }
+    .correct { background-color: #6aaa64; color: white; }
+    .present { background-color: #c9b458; color: white; }
+    .absent { background-color: #787c7e; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Mini Wordle</h1>
+  <div id="grid"></div>
+  <script>
+    const MAX_ROWS = 6, COLS = 5;
+    let ANSWER, WORDS = [], currentRow, currentCol;
+    const grid = document.getElementById('grid');
+
+    // Load word list then start game
+    fetch('words.txt')
+      .then(res => res.text())
+      .then(text => {
+        WORDS = text.split(/\r?\n/).filter(w => w.length === COLS);
+        startGame();
+      })
+      .catch(err => {
+        console.error('Could not load word list', err);
+        WORDS = ['apple','berry','mango'];
+        startGame();
+      });
+
+    function startGame() {
+      // Reset state
+      currentRow = 0;
+      currentCol = 0;
+      ANSWER = "anton";
+
+      // Build fresh grid
+      grid.innerHTML = '';
+      buildGrid();
+      attachHandlers();
+    }
+
+    function buildGrid() {
+      for (let r = 0; r < MAX_ROWS; r++) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          row.appendChild(cell);
+        }
+        grid.appendChild(row);
+      }
+    }
+
+    function attachHandlers() {
+      document.onkeydown = (e) => {
+        if (currentRow >= MAX_ROWS) return;
+        const row = grid.children[currentRow];
+
+        if (e.key === 'Backspace') {
+          if (currentCol > 0) {
+            currentCol--;
+            const cell = row.children[currentCol];
+            cell.textContent = '';
+            cell.classList.remove('filled');
+          }
+        } else if (e.key === 'Enter') {
+          if (currentCol === COLS) {
+            let guess = '';
+            for (let i = 0; i < COLS; i++) {
+              guess += row.children[i].textContent.toLowerCase();
+            }
+            if (!WORDS.includes(guess)) {
+              alert('Not in word list');
+              return;
+            }
+
+            // Evaluate guess
+            const answerArr = ANSWER.split('');
+            const guessArr = guess.split('');
+            const result = Array(COLS).fill('absent');
+
+            // First pass: correct
+            for (let i = 0; i < COLS; i++) {
+              if (guessArr[i] === answerArr[i]) {
+                result[i] = 'correct';
+                answerArr[i] = null;
+              }
+            }
+            // Second pass: present
+            for (let i = 0; i < COLS; i++) {
+              if (result[i] !== 'correct') {
+                const idx = answerArr.indexOf(guessArr[i]);
+                if (idx !== -1) {
+                  result[i] = 'present';
+                  answerArr[idx] = null;
+                }
+              }
+            }
+
+            // Color cells
+            for (let i = 0; i < COLS; i++) {
+              row.children[i].classList.add(result[i]);
+            }
+
+            if (guess === ANSWER) {
+              setTimeout(() => alert('You Win!'), 10);
+              currentRow = MAX_ROWS;
+              return;
+            }
+            currentRow++;
+            currentCol = 0;
+          }
+        } else if (e.key.match(/^[a-zA-Z]$/)) {
+          if (currentCol < COLS) {
+            const cell = row.children[currentCol];
+            cell.textContent = e.key.toUpperCase();
+            cell.classList.add('filled');
+            currentCol++;
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>
