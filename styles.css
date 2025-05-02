@@ -97,3 +97,25 @@ body {
   background-color: rgba(255, 255, 0, 0.3); /* Light yellow background */
   transition: background-color 1s ease-out; /* Smooth transition */
 }
+
+.wordle-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;              /* vertical spacing */
+  display: flex;
+  justify-content: center;     /* centers the <li> horizontally */
+}
+
+.wordle-nav .wordle-btn {
+  display: inline-block;
+  padding: 1rem 2.5rem;        /* bigger hit-area */
+  font-size: 1.25rem;          /* larger text */
+  background-color: #0d6efd;   /* bootstrap primary blue */
+  color: #fff;
+  text-decoration: none;
+  border-radius: .375rem;      /* ~6px rounding */
+}
+
+.wordle-nav .wordle-btn:hover {
+  opacity: 0.9;
+}
