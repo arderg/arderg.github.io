@@ -397,6 +397,7 @@
     const gameState = {
       answer: '',
       words: [],
+      answers: [],
       currentRow: 0,
       currentCol: 0,
       history: [],
@@ -428,15 +429,32 @@
     // Word List Loading
     async function loadWordList() {
       try {
-        const response = await fetch('words.txt');
-        if (!response.ok) throw new Error('Failed to load word list');
-        const text = await response.text();
-        const words = text.split(/\r?\n/).filter(w => w.length === COLS);
-        if (words.length === 0) throw new Error('No valid words found');
+        // Load both word lists
+        const [wordsResponse, answersResponse] = await Promise.all([
+          fetch('data/words.txt'),
+          fetch('data/answers.txt')
+        ]);
+        
+        if (!wordsResponse.ok || !answersResponse.ok) {
+          throw new Error('Failed to load word lists');
+        }
+        
+        const wordsText = await wordsResponse.text();
+        const answersText = await answersResponse.text();
+        
+        const words = wordsText.split(/\r?\n/).filter(w => w.length === COLS);
+        const answers = answersText.split(/\r?\n/).filter(w => w.length === COLS);
+        
+        if (words.length === 0 || answers.length === 0) {
+          throw new Error('No valid words found');
+        }
+        
         gameState.words = words;
+        gameState.answers = answers;
       } catch (error) {
         console.error(ERROR_MESSAGES.NO_WORD_LIST, error);
         gameState.words = ['apple','berry','mango'];
+        gameState.answers = ['apple','berry','mango'];
       }
       startGame();
     }
@@ -463,8 +481,8 @@
       gameState.isGameActive = false;
       
       if (gameState.currentRow === 0) {
-        const randomIndex = Math.floor(Math.random() * gameState.words.length);
-        gameState.answer = gameState.words[randomIndex];
+        const randomIndex = Math.floor(Math.random() * gameState.answers.length);
+        gameState.answer = gameState.answers[randomIndex];
         if (!gameState.answer) {
           throw new Error('Failed to select a valid word');
         }

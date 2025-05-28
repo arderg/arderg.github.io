@@ -2,8 +2,8 @@ import { getFeedbackPattern } from './feedbackUtils.js';
 import { findBestGuess } from './guessScorer.js';
 
 // Load word lists
-const answerList = await fetch('/answers.txt').then(r => r.text()).then(t => t.split('\n'));
-const allWords = await fetch('/words.txt').then(r => r.text()).then(t => t.split('\n'));
+const answerList = await fetch('/data/answers.txt').then(r => r.text()).then(t => t.split('\n'));
+const allWords = await fetch('/data/words.txt').then(r => r.text()).then(t => t.split('\n'));
 
 let remainingCandidates = [...answerList];
 

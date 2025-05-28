@@ -3,7 +3,7 @@ const path = require('path');
 
 // Read the common words file
 const commonWordsPath = path.join(__dirname, '..', 'data', 'common_words.txt');
-const answersPath = path.join(__dirname, '..', 'answers.txt');
+const answersPath = path.join(__dirname, '..', 'data', 'answers.txt');
 
 // Read and process the common words for answers
 const commonWords = fs.readFileSync(commonWordsPath, 'utf8')
