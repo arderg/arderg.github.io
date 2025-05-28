@@ -1,5 +1,14 @@
+import { resetSolver, updateCandidates, getNextGuess } from './src/solver.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const mainBody = document.getElementById('mainBody');
+  
+  // Initialize solver
+  resetSolver();
+  
+  // Get initial guess
+  const initialGuess = getNextGuess();
+  console.log('Suggested first guess:', initialGuess);
 
   // Toggle dark mode on double-click
   mainBody.addEventListener('dblclick', () => {
@@ -30,3 +39,11 @@ document.getElementById('contactButton').addEventListener('click', function(even
       overlay.classList.remove('visible');
   }, 2000);
 });
+
+// Add this function to your existing game logic
+function handleGuessFeedback(guess, pattern) {
+    updateCandidates(guess, pattern);
+    const nextGuess = getNextGuess();
+    console.log('Suggested next guess:', nextGuess);
+    return nextGuess;
+}

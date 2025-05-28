@@ -1,0 +1,8 @@
+{
+  "name": "arderg-wordle",
+  "version": "1.0.0",
+  "description": "Wordle game with common words",
+  "scripts": {
+    "build:words": "node scripts/generate-words.js"
+  }
+} 
