@@ -46,6 +46,7 @@
       display: flex; 
       flex-direction: column; 
       align-items: center; 
+      margin-top: 20px;
     }
     .key-row { display: flex; }
     .key { 
@@ -54,10 +55,33 @@
       border: 1px solid #999; 
       border-radius: 4px; 
       cursor: pointer; 
-      user-select: none; 
+      user-select: none;
+      background-color: #d3d6da;
+      color: #1a1a1b;
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+      transition: background-color 0.2s, color 0.2s;
     }
-    .key:active { background: #ddd; }
+    .key:active { background: #bbb; }
     .key.wide { flex: 1.5; text-align: center; }
+    
+    /* Keyboard letter states */
+    .key.gray {
+      background-color: #787c7e;
+      color: white;
+      border-color: #787c7e;
+    }
+    .key.yellow {
+      background-color: #c9b458;
+      color: white;
+      border-color: #c9b458;
+    }
+    .key.green {
+      background-color: #6aaa64;
+      color: white;
+      border-color: #6aaa64;
+    }
 
     /* Game Status and Controls */
     #gameStatus { 
@@ -323,6 +347,50 @@
     .modal-footer .game-button {
       min-width: 120px;
     }
+
+    /* Game Settings Styles */
+    .game-settings {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    .setting-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+    .setting-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .setting-item span {
+      font-size: 1.1rem;
+      color: #333;
+    }
+    .setting-tooltip {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 10px;
+      padding: 8px 12px;
+      background-color: #333;
+      color: white;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .setting-item:hover .setting-tooltip {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -337,8 +405,15 @@
   <div id="buttonContainer">
     <button id="newGameBtn" class="game-button">New Game</button>
     <button id="reviewBtn" class="game-button">Review</button>
-    <button id="solverBtn" class="game-button">Get Best Guess</button>
     <button id="playAgainBtn" class="game-button">Play Again</button>
+  </div>
+
+  <div id="gameSettings" class="game-settings">
+    <label class="setting-item">
+      <input type="checkbox" id="hardModeToggle">
+      <span>Hard Mode</span>
+      <div class="setting-tooltip">In Hard Mode, suggested guesses must use all revealed hints</div>
+    </label>
   </div>
 
   <!-- Review Modal -->
@@ -373,535 +448,6 @@
     </div>
   </div>
 
-  <script type="module">
-    import { getFeedbackPattern } from './src/feedbackUtils.js';
-    import { findBestGuess } from './src/guessScorer.js';
-
-    // Game Constants
-    const ROWS = 6;
-    const COLS = 5;
-    const KEYBOARD_LAYOUT = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-    const LETTER_STATES = {
-      CORRECT: 'correct',
-      PRESENT: 'present',
-      ABSENT: 'absent'
-    };
-    const ERROR_MESSAGES = {
-      NO_WORD_LIST: 'Error loading word list. Using default words.',
-      INVALID_GUESS: 'Not in word list!',
-      GAME_NOT_STARTED: 'Please start a new game first.',
-      NO_HISTORY: 'No game history available.'
-    };
-
-    // Game State
-    const gameState = {
-      answer: '',
-      words: [],
-      answers: [],
-      currentRow: 0,
-      currentCol: 0,
-      history: [],
-      remainingWords: [],
-      letterFrequencies: {
-        position: Array(COLS).fill({}),
-        overall: {}
-      },
-      isGameActive: false
-    };
-
-    // DOM Elements Cache
-    const elements = {
-      grid: document.getElementById('grid'),
-      keyboard: document.getElementById('keyboard'),
-      gameStatus: document.getElementById('gameStatus'),
-      newGameBtn: document.getElementById('newGameBtn'),
-      reviewBtn: document.getElementById('reviewBtn'),
-      solverBtn: document.getElementById('solverBtn'),
-      playAgainBtn: document.getElementById('playAgainBtn'),
-      reviewModal: document.getElementById('reviewModal'),
-      closeModal: document.querySelector('.close-modal'),
-      guessHistory: document.getElementById('guessHistory'),
-      reviewAnswer: document.getElementById('reviewAnswer'),
-      reviewAttempts: document.getElementById('reviewAttempts'),
-      reviewResult: document.getElementById('reviewResult')
-    };
-
-    // Word List Loading
-    async function loadWordList() {
-      try {
-        // Load both word lists
-        const [wordsResponse, answersResponse] = await Promise.all([
-          fetch('data/words.txt'),
-          fetch('data/answers.txt')
-        ]);
-        
-        if (!wordsResponse.ok || !answersResponse.ok) {
-          throw new Error('Failed to load word lists');
-        }
-        
-        const wordsText = await wordsResponse.text();
-        const answersText = await answersResponse.text();
-        
-        const words = wordsText.split(/\r?\n/).filter(w => w.length === COLS);
-        const answers = answersText.split(/\r?\n/).filter(w => w.length === COLS);
-        
-        if (words.length === 0 || answers.length === 0) {
-          throw new Error('No valid words found');
-        }
-        
-        gameState.words = words;
-        gameState.answers = answers;
-      } catch (error) {
-        console.error(ERROR_MESSAGES.NO_WORD_LIST, error);
-        gameState.words = ['apple','berry','mango'];
-        gameState.answers = ['apple','berry','mango'];
-      }
-      startGame();
-    }
-
-    // Game Initialization
-    function startGame() {
-      try {
-        resetGameState();
-        resetUI();
-        buildGameElements();
-        attachEventHandlers();
-        gameState.isGameActive = true;
-      } catch (error) {
-        console.error('Error starting game:', error);
-        elements.gameStatus.textContent = 'Error starting game. Please refresh the page.';
-      }
-    }
-
-    function resetGameState() {
-      gameState.currentRow = 0;
-      gameState.currentCol = 0;
-      gameState.history = [];
-      gameState.remainingWords = [...gameState.words];
-      gameState.isGameActive = false;
-      
-      if (gameState.currentRow === 0) {
-        const randomIndex = Math.floor(Math.random() * gameState.answers.length);
-        gameState.answer = gameState.answers[randomIndex];
-        if (!gameState.answer) {
-          throw new Error('Failed to select a valid word');
-        }
-      }
-    }
-
-    function resetUI() {
-      elements.grid.innerHTML = '';
-      elements.gameStatus.textContent = 'Practice Mode - Try to guess the word!';
-      elements.reviewBtn.style.display = 'none';
-      elements.solverBtn.style.display = 'inline-block';
-      elements.playAgainBtn.style.display = 'none';
-      document.querySelector('.solver-suggestion')?.remove();
-    }
-
-    function buildGameElements() {
-      buildGrid();
-      buildKeyboard();
-    }
-
-    // Grid Building
-    function buildGrid() {
-      const fragment = document.createDocumentFragment();
-      for (let r = 0; r < ROWS; r++) {
-        const row = document.createElement('div');
-        row.className = 'row';
-        for (let c = 0; c < COLS; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          row.appendChild(cell);
-        }
-        fragment.appendChild(row);
-      }
-      elements.grid.appendChild(fragment);
-    }
-
-    // Keyboard Building
-    function buildKeyboard() {
-      KEYBOARD_LAYOUT.forEach((rowStr, i) => {
-        const rowDiv = document.getElementById('row' + (i+1));
-        rowDiv.innerHTML = '';
-        
-        const fragment = document.createDocumentFragment();
-        if (i === 2) {
-          fragment.appendChild(createKey('Enter', 'wide'));
-        }
-        
-        for (const char of rowStr) {
-          fragment.appendChild(createKey(char));
-        }
-        
-        if (i === 2) {
-          fragment.appendChild(createKey('Backspace', 'wide'));
-        }
-        
-        rowDiv.appendChild(fragment);
-      });
-    }
-
-    function createKey(label, extraClass='') {
-      const key = document.createElement('div');
-      key.textContent = label;
-      key.className = 'key ' + extraClass;
-      key.addEventListener('click', () => handleKey(label));
-      return key;
-    }
-
-    // Event Handling
-    function attachEventHandlers() {
-      document.onkeydown = e => handleKey(e.key);
-      elements.newGameBtn.addEventListener('click', startGame);
-      elements.reviewBtn.addEventListener('click', showReview);
-      elements.solverBtn.addEventListener('click', showSolverSuggestion);
-      elements.playAgainBtn.addEventListener('click', startGame);
-      document.getElementById('modalPlayAgainBtn').addEventListener('click', () => {
-        elements.reviewModal.style.display = 'none';
-        startGame();
-      });
-      elements.closeModal.addEventListener('click', () => {
-        elements.reviewModal.style.display = 'none';
-      });
-      window.addEventListener('click', (e) => {
-        if (e.target === elements.reviewModal) {
-          elements.reviewModal.style.display = 'none';
-        }
-      });
-    }
-
-    // Game Logic
-    function handleKey(key) {
-      if (!gameState.isGameActive) return;
-      if (gameState.currentRow >= ROWS) return;
-      
-      const row = elements.grid.children[gameState.currentRow];
-      if (!row) return;
-      
-      if (key === 'Backspace') {
-        handleBackspace(row);
-      } else if (key === 'Enter') {
-        if (gameState.currentCol === COLS) processGuess(row);
-      } else if (/^[a-zA-Z]$/.test(key)) {
-        handleLetter(key, row);
-      }
-    }
-
-    function handleBackspace(row) {
-      if (gameState.currentCol > 0) {
-        gameState.currentCol--;
-        const cell = row.children[gameState.currentCol];
-        cell.textContent = '';
-        cell.classList.remove('filled');
-      }
-    }
-
-    function handleLetter(key, row) {
-      if (gameState.currentCol < COLS) {
-        const cell = row.children[gameState.currentCol];
-        cell.textContent = key.toUpperCase();
-        cell.classList.add('filled');
-        gameState.currentCol++;
-      }
-    }
-
-    // Word Processing
-    function processGuess(row) {
-      try {
-        const guess = getCurrentGuess(row);
-        if (!isValidGuess(guess)) return;
-        
-        const result = evaluateGuess(guess);
-        updateGrid(row, result);
-        updateGameState(guess, result);
-        
-        if (isGameOver(guess)) {
-          endGame();
-        }
-      } catch (error) {
-        console.error('Error processing guess:', error);
-        elements.gameStatus.textContent = 'Error processing guess. Please try again.';
-      }
-    }
-
-    function getCurrentGuess(row) {
-      return Array.from(row.children)
-        .map(cell => cell.textContent.toLowerCase())
-        .join('');
-    }
-
-    function isValidGuess(guess) {
-      if (!gameState.words.includes(guess)) {
-        elements.gameStatus.textContent = ERROR_MESSAGES.INVALID_GUESS;
-        return false;
-      }
-      return true;
-    }
-
-    function evaluateGuess(guess) {
-      const answerArr = gameState.answer.split('');
-      const guessArr = guess.split('');
-      const result = Array(COLS).fill(LETTER_STATES.ABSENT);
-      
-      // Check for correct letters
-      for (let i = 0; i < COLS; i++) {
-        if (guessArr[i] === answerArr[i]) {
-          result[i] = LETTER_STATES.CORRECT;
-          answerArr[i] = null;
-        }
-      }
-      
-      // Check for present letters
-      for (let i = 0; i < COLS; i++) {
-        if (result[i] !== LETTER_STATES.CORRECT) {
-          const idx = answerArr.indexOf(guessArr[i]);
-          if (idx !== -1) {
-            result[i] = LETTER_STATES.PRESENT;
-            answerArr[idx] = null;
-          }
-        }
-      }
-      
-      return result;
-    }
-
-    function updateGrid(row, result) {
-      Array.from(row.children).forEach((cell, i) => {
-        cell.classList.add(result[i]);
-      });
-    }
-
-    function updateGameState(guess, result) {
-      try {
-        gameState.remainingWords = filterWords(guess, result);
-        gameState.history.push({
-          guess: guess.toUpperCase(),
-          result: result,
-          remainingWords: [...gameState.remainingWords]
-        });
-        document.querySelector('.solver-suggestion')?.remove();
-      } catch (error) {
-        console.error('Error updating game state:', error);
-      }
-    }
-
-    function isGameOver(guess) {
-      if (guess === gameState.answer) {
-        elements.gameStatus.textContent = 'You Win!';
-        return true;
-      }
-      gameState.currentRow++;
-      gameState.currentCol = 0;
-      if (gameState.currentRow >= ROWS) {
-        elements.gameStatus.textContent = 'Game Over!';
-        return true;
-      }
-      return false;
-    }
-
-    function endGame() {
-      gameState.currentRow = ROWS;
-      gameState.isGameActive = false;
-      elements.reviewBtn.style.display = 'inline-block';
-      elements.solverBtn.style.display = 'none';
-      elements.playAgainBtn.style.display = 'inline-block';
-    }
-
-    // Word Filtering
-    function filterWords(guess, result) {
-      return gameState.remainingWords.filter(word => {
-        const wordArr = word.split('');
-        const guessArr = guess.toLowerCase().split('');
-        
-        for (let i = 0; i < COLS; i++) {
-          if (result[i] === LETTER_STATES.CORRECT) {
-            if (wordArr[i] !== guessArr[i]) return false;
-          } else if (result[i] === LETTER_STATES.PRESENT) {
-            if (!wordArr.includes(guessArr[i]) || wordArr[i] === guessArr[i]) return false;
-          } else if (result[i] === LETTER_STATES.ABSENT) {
-            if (wordArr[i] === guessArr[i]) return false;
-            
-            const letterCount = guessArr.filter((l, idx) => 
-              (result[idx] === LETTER_STATES.CORRECT || result[idx] === LETTER_STATES.PRESENT) && l === guessArr[i]
-            ).length;
-            
-            if (letterCount > 0) {
-              if (wordArr[i] === guessArr[i]) return false;
-            } else {
-              if (wordArr.includes(guessArr[i])) return false;
-            }
-          }
-        }
-        return true;
-      });
-    }
-
-    // Solver Logic
-    function calculateLetterFrequencies(words) {
-      if (!words || words.length === 0) return;
-      
-      gameState.letterFrequencies.position = Array(COLS).fill({});
-      gameState.letterFrequencies.overall = {};
-
-      words.forEach(word => {
-        if (!word || word.length !== COLS) return;
-        const letters = word.split('');
-        letters.forEach((letter, pos) => {
-          gameState.letterFrequencies.position[pos][letter] = 
-            (gameState.letterFrequencies.position[pos][letter] || 0) + 1;
-          gameState.letterFrequencies.overall[letter] = 
-            (gameState.letterFrequencies.overall[letter] || 0) + 1;
-        });
-      });
-    }
-
-    function getWordScore(word) {
-      const letters = word.split('');
-      let score = 0;
-      const usedLetters = new Set();
-
-      letters.forEach((letter, pos) => {
-        score += (gameState.letterFrequencies.position[pos][letter] || 0) * 2;
-        
-        if (!usedLetters.has(letter)) {
-          score += (gameState.letterFrequencies.overall[letter] || 0);
-          usedLetters.add(letter);
-        }
-      });
-
-      return score;
-    }
-
-    function simulateBestGuess(remainingWords, actualGuess) {
-      if (!remainingWords || remainingWords.length === 0) return null;
-      
-      // If only one word remains, return it
-      if (remainingWords.length <= 2) {
-        return remainingWords[0];
-      }
-
-      // Use our new optimal solver
-      return findBestGuess(gameState.words, remainingWords);
-    }
-
-    function showSolverSuggestion() {
-      if (!gameState.isGameActive) {
-        elements.gameStatus.textContent = ERROR_MESSAGES.GAME_NOT_STARTED;
-        return;
-      }
-
-      const bestGuess = simulateBestGuess(gameState.remainingWords, '');
-      if (!bestGuess) {
-        elements.gameStatus.textContent = 'Unable to suggest a guess.';
-        return;
-      }
-
-      let suggestion = document.querySelector('.solver-suggestion');
-      if (!suggestion) {
-        suggestion = document.createElement('div');
-        suggestion.className = 'solver-suggestion';
-        document.querySelector('#buttonContainer').insertAdjacentElement('beforebegin', suggestion);
-      }
-
-      suggestion.innerHTML = `
-        <strong>Suggested guess:</strong> ${bestGuess.toUpperCase()}
-        <br>
-        <small>Based on ${gameState.remainingWords.length} possible words</small>
-      `;
-    }
-
-    // Review Logic
-    function showReview() {
-      if (!gameState.history || gameState.history.length === 0) {
-        elements.gameStatus.textContent = ERROR_MESSAGES.NO_HISTORY;
-        return;
-      }
-
-      try {
-        elements.guessHistory.innerHTML = '';
-        
-        let simulatedRemainingWords = [...gameState.words];
-        const bestGuesses = [];
-        
-        gameState.history.forEach(guess => {
-          const bestGuess = simulateBestGuess(simulatedRemainingWords, guess.guess.toLowerCase());
-          bestGuesses.push(bestGuess || guess.guess.toLowerCase());
-          simulatedRemainingWords = filterWords(guess.guess.toLowerCase(), guess.result);
-        });
-        
-        const fragment = document.createDocumentFragment();
-        gameState.history.forEach((guess, index) => {
-          const guessItem = createGuessItem(guess, index, bestGuesses[index]);
-          fragment.appendChild(guessItem);
-        });
-        
-        elements.guessHistory.appendChild(fragment);
-        updateReviewSummary();
-        elements.reviewModal.style.display = 'block';
-      } catch (error) {
-        console.error('Error showing review:', error);
-        elements.gameStatus.textContent = 'Error showing review. Please try again.';
-      }
-    }
-
-    function createGuessItem(guess, index, bestGuess) {
-      const guessItem = document.createElement('div');
-      guessItem.className = 'guess-item';
-      
-      const isOptimal = bestGuess.toLowerCase() === guess.guess.toLowerCase();
-      const scoreDiff = Math.abs(getWordScore(bestGuess) - getWordScore(guess.guess.toLowerCase()));
-      const isClose = scoreDiff <= getWordScore(bestGuess) * 0.1;
-      
-      guessItem.innerHTML = `
-        <div class="guess-header">
-          <div class="guess-number">Guess ${index + 1}</div>
-          <div class="guess-grid">
-            ${Array.from({length: COLS}, (_, i) => `
-              <div class="guess-cell ${guess.result[i]}">${guess.guess[i]}</div>
-            `).join('')}
-          </div>
-          <div class="guess-result ${guess.guess === gameState.answer.toUpperCase() ? 'correct' : 'incorrect'}">
-            ${guess.guess === gameState.answer.toUpperCase() ? 'Correct!' : 'Incorrect'}
-          </div>
-        </div>
-        <div class="guess-analysis">
-          <div class="guess-comparison">
-            <div class="user-guess">
-              <div class="label">Your Guess</div>
-              <div class="word">${guess.guess}</div>
-              ${isOptimal ? 
-                '<div class="optimal">✓ Optimal Choice!</div>' : 
-                isClose ? 
-                '<div class="optimal">✓ Good Choice!</div>' :
-                '<div class="suboptimal">Could be improved</div>'
-              }
-            </div>
-            <div class="best-guess">
-              <div class="label">Best Possible Guess</div>
-              <div class="word">${bestGuess.toUpperCase()}</div>
-              <div class="word-count">${guess.remainingWords.length} words remain</div>
-            </div>
-          </div>
-          <div class="remaining-words">
-            <div class="word-count">Remaining Possible Words:</div>
-            <div class="possible-words">${guess.remainingWords.slice(0, 10).join(', ')}${guess.remainingWords.length > 10 ? '...' : ''}</div>
-          </div>
-        </div>
-      `;
-      
-      return guessItem;
-    }
-
-    function updateReviewSummary() {
-      elements.reviewAnswer.textContent = gameState.answer.toUpperCase();
-      elements.reviewAttempts.textContent = gameState.history.length;
-      elements.reviewResult.textContent = 
-        gameState.history[gameState.history.length - 1].guess === gameState.answer.toUpperCase() ? 'Win' : 'Loss';
-    }
-
-    // Initialize Game
-    loadWordList();
-  </script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
