@@ -5,58 +5,486 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mini Wordle</title>
   <style>
-    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 20px; }
-    #grid { display: grid; grid-template-rows: repeat(6, 1fr); grid-gap: 5px; margin-bottom: 20px; }
-    .row { display: grid; grid-template-columns: repeat(5, 1fr); grid-gap: 5px; }
-    .cell { width: 60px; height: 60px; border: 2px solid #ccc; display: flex; justify-content: center; align-items: center; font-size: 2rem; text-transform: uppercase; }
+    /* Base Styles */
+    body { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      font-family: sans-serif; 
+      margin: 20px; 
+    }
+
+    /* Game Grid */
+    #grid { 
+      display: grid; 
+      grid-template-rows: repeat(6, 1fr); 
+      grid-gap: 5px; 
+      margin-bottom: 20px; 
+    }
+    .row { 
+      display: grid; 
+      grid-template-columns: repeat(5, 1fr); 
+      grid-gap: 5px; 
+    }
+    .cell { 
+      width: 60px; 
+      height: 60px; 
+      border: 2px solid #ccc; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      font-size: 2rem; 
+      text-transform: uppercase; 
+    }
     .cell.filled { border-color: #999; }
     .correct { background-color: #6aaa64; color: white; }
     .present { background-color: #c9b458; color: white; }
     .absent { background-color: #787c7e; color: white; }
-    #keyboard { display: flex; flex-direction: column; align-items: center; }
+
+    /* Keyboard */
+    #keyboard { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+    }
     .key-row { display: flex; }
-    .key { margin: 2px; padding: 10px 12px; border: 1px solid #999; border-radius: 4px; cursor: pointer; user-select: none; }
+    .key { 
+      margin: 2px; 
+      padding: 10px 12px; 
+      border: 1px solid #999; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      user-select: none; 
+    }
     .key:active { background: #ddd; }
     .key.wide { flex: 1.5; text-align: center; }
+
+    /* Game Status and Controls */
+    #gameStatus { 
+      margin: 10px 0; 
+      font-size: 1.2rem; 
+      text-align: center; 
+      min-height: 1.5em; 
+    }
+    #buttonContainer {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .game-button { 
+      margin: 10px 5px;
+      padding: 10px 20px;
+      border: 1px solid #999;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    /* Button Styles */
+    #newGameBtn { background-color: #6aaa64; }
+    #newGameBtn:hover { background-color: #5c9a56; }
+    #newGameBtn:active { background-color: #4a8a44; }
+    
+    #playAgainBtn {
+      background-color: #2196f3;
+      display: none;
+    }
+    #playAgainBtn:hover { background-color: #1976d2; }
+    #playAgainBtn:active { background-color: #1565c0; }
+    
+    #reviewBtn {
+      background-color: #c9b458;
+      display: none;
+    }
+    #reviewBtn:hover { background-color: #b8a347; }
+    #reviewBtn:active { background-color: #a69236; }
+    
+    #solverBtn {
+      background-color: #2196f3;
+      display: none;
+    }
+    #solverBtn:hover { background-color: #1976d2; }
+    #solverBtn:active { background-color: #1565c0; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+    .modal-content {
+      position: relative;
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .close-modal {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    .close-modal:hover { color: #000; }
+
+    /* Review Section Styles */
+    .review-section {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    .review-section h3 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 8px;
+    }
+    .guess-history {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .guess-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .guess-number {
+      font-weight: bold;
+      color: #666;
+      min-width: 60px;
+    }
+    .guess-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+    .guess-cell {
+      width: 35px;
+      height: 35px;
+      border: 2px solid #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+    }
+    .guess-result {
+      margin-left: auto;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .guess-result.correct { background-color: #6aaa64; color: white; }
+    .guess-result.incorrect { background-color: #787c7e; color: white; }
+
+    /* Game Summary Styles */
+    .game-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .summary-item {
+      background-color: white;
+      padding: 15px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .summary-item h4 {
+      margin: 0 0 10px 0;
+      color: #666;
+    }
+    .summary-item p {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Guess Analysis Styles */
+    .guess-analysis {
+      margin-top: 10px;
+      padding: 12px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      border: 1px solid #e9ecef;
+    }
+    .guess-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .guess-comparison > div {
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .guess-comparison .user-guess {
+      background-color: #e8f5e9;
+      border: 1px solid #c8e6c9;
+    }
+    .guess-comparison .best-guess {
+      background-color: #e3f2fd;
+      border: 1px solid #bbdefb;
+    }
+    .guess-comparison .label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #424242;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .guess-comparison .word {
+      font-family: 'Courier New', monospace;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 5px 0;
+      text-align: center;
+    }
+    .guess-comparison .optimal {
+      color: #2e7d32;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 8px;
+      padding: 4px;
+      background-color: #c8e6c9;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .guess-comparison .suboptimal {
+      color: #c62828;
+      text-align: center;
+      margin-top: 8px;
+      padding: 4px;
+      background-color: #ffcdd2;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    /* Remaining Words Styles */
+    .remaining-words {
+      margin-top: 12px;
+      padding: 10px;
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    .word-count {
+      font-weight: 600;
+      color: #424242;
+      margin-bottom: 5px;
+    }
+    .possible-words {
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #666;
+      max-height: 80px;
+      overflow-y: auto;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    .modal-footer .game-button {
+      min-width: 120px;
+    }
   </style>
 </head>
 <body>
   <h1>Mini Wordle</h1>
+  <div id="gameStatus"></div>
   <div id="grid"></div>
   <div id="keyboard">
     <div class="key-row" id="row1"></div>
     <div class="key-row" id="row2"></div>
     <div class="key-row" id="row3"></div>
   </div>
+  <div id="buttonContainer">
+    <button id="newGameBtn" class="game-button">New Game</button>
+    <button id="reviewBtn" class="game-button">Review</button>
+    <button id="solverBtn" class="game-button">Get Best Guess</button>
+    <button id="playAgainBtn" class="game-button">Play Again</button>
+  </div>
+
+  <!-- Review Modal -->
+  <div id="reviewModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Game Review</h2>
+      
+      <div class="review-section">
+        <h3>Guess History</h3>
+        <div id="guessHistory" class="guess-history"></div>
+      </div>
+
+      <div class="game-summary">
+        <div class="summary-item">
+          <h4>Answer</h4>
+          <p id="reviewAnswer"></p>
+        </div>
+        <div class="summary-item">
+          <h4>Attempts</h4>
+          <p id="reviewAttempts"></p>
+        </div>
+        <div class="summary-item">
+          <h4>Result</h4>
+          <p id="reviewResult"></p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modalPlayAgainBtn" class="game-button">Play Again</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const MAX_ROWS = 6, COLS = 5;
-    let ANSWER, WORDS = [], currentRow, currentCol;
-    const grid = document.getElementById('grid');
-    const keyboard = document.getElementById('keyboard');
-    const layout = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    // Game Constants
+    const MAX_ROWS = 6;
+    const COLS = 5;
+    const KEYBOARD_LAYOUT = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    const LETTER_STATES = {
+      CORRECT: 'correct',
+      PRESENT: 'present',
+      ABSENT: 'absent'
+    };
+    const ERROR_MESSAGES = {
+      NO_WORD_LIST: 'Error loading word list. Using default words.',
+      INVALID_GUESS: 'Not in word list!',
+      GAME_NOT_STARTED: 'Please start a new game first.',
+      NO_HISTORY: 'No game history available.'
+    };
 
-    fetch('words.txt')
-      .then(res => res.text())
-      .then(text => {
-        WORDS = text.split(/\r?\n/).filter(w => w.length === COLS);
-        startGame();
-      })
-      .catch(() => {
-        WORDS = ['apple','berry','mango'];
-        startGame();
-      });
+    // Game State
+    const gameState = {
+      answer: '',
+      words: [],
+      currentRow: 0,
+      currentCol: 0,
+      history: [],
+      remainingWords: [],
+      letterFrequencies: {
+        position: Array(COLS).fill({}),
+        overall: {}
+      },
+      isGameActive: false
+    };
 
-    function startGame() {
-      currentRow = 0;
-      currentCol = 0;
-      ANSWER = "anton";
-      grid.innerHTML = '';
-      buildGrid();
-      buildKeyboard();
-      attachHandlers();
+    // DOM Elements Cache
+    const elements = {
+      grid: document.getElementById('grid'),
+      keyboard: document.getElementById('keyboard'),
+      gameStatus: document.getElementById('gameStatus'),
+      newGameBtn: document.getElementById('newGameBtn'),
+      reviewBtn: document.getElementById('reviewBtn'),
+      solverBtn: document.getElementById('solverBtn'),
+      playAgainBtn: document.getElementById('playAgainBtn'),
+      reviewModal: document.getElementById('reviewModal'),
+      closeModal: document.querySelector('.close-modal'),
+      guessHistory: document.getElementById('guessHistory'),
+      reviewAnswer: document.getElementById('reviewAnswer'),
+      reviewAttempts: document.getElementById('reviewAttempts'),
+      reviewResult: document.getElementById('reviewResult')
+    };
+
+    // Word List Loading
+    async function loadWordList() {
+      try {
+        const response = await fetch('words.txt');
+        if (!response.ok) throw new Error('Failed to load word list');
+        const text = await response.text();
+        const words = text.split(/\r?\n/).filter(w => w.length === COLS);
+        if (words.length === 0) throw new Error('No valid words found');
+        gameState.words = words;
+      } catch (error) {
+        console.error(ERROR_MESSAGES.NO_WORD_LIST, error);
+        gameState.words = ['apple','berry','mango'];
+      }
+      startGame();
     }
 
+    // Game Initialization
+    function startGame() {
+      try {
+        resetGameState();
+        resetUI();
+        buildGameElements();
+        attachEventHandlers();
+        gameState.isGameActive = true;
+      } catch (error) {
+        console.error('Error starting game:', error);
+        elements.gameStatus.textContent = 'Error starting game. Please refresh the page.';
+      }
+    }
+
+    function resetGameState() {
+      gameState.currentRow = 0;
+      gameState.currentCol = 0;
+      gameState.history = [];
+      gameState.remainingWords = [...gameState.words];
+      gameState.isGameActive = false;
+      
+      if (gameState.currentRow === 0) {
+        const randomIndex = Math.floor(Math.random() * gameState.words.length);
+        gameState.answer = gameState.words[randomIndex];
+        if (!gameState.answer) {
+          throw new Error('Failed to select a valid word');
+        }
+      }
+    }
+
+    function resetUI() {
+      elements.grid.innerHTML = '';
+      elements.gameStatus.textContent = 'Practice Mode - Try to guess the word!';
+      elements.reviewBtn.style.display = 'none';
+      elements.solverBtn.style.display = 'inline-block';
+      elements.playAgainBtn.style.display = 'none';
+      document.querySelector('.solver-suggestion')?.remove();
+    }
+
+    function buildGameElements() {
+      buildGrid();
+      buildKeyboard();
+    }
+
+    // Grid Building
     function buildGrid() {
+      const fragment = document.createDocumentFragment();
       for (let r = 0; r < MAX_ROWS; r++) {
         const row = document.createElement('div');
         row.className = 'row';
@@ -65,23 +493,31 @@
           cell.className = 'cell';
           row.appendChild(cell);
         }
-        grid.appendChild(row);
+        fragment.appendChild(row);
       }
+      elements.grid.appendChild(fragment);
     }
 
+    // Keyboard Building
     function buildKeyboard() {
-      layout.forEach((rowStr, i) => {
+      KEYBOARD_LAYOUT.forEach((rowStr, i) => {
         const rowDiv = document.getElementById('row' + (i+1));
         rowDiv.innerHTML = '';
+        
+        const fragment = document.createDocumentFragment();
         if (i === 2) {
-          rowDiv.appendChild(createKey('Enter', 'wide'));
+          fragment.appendChild(createKey('Enter', 'wide'));
         }
-        for (let char of rowStr) {
-          rowDiv.appendChild(createKey(char));
+        
+        for (const char of rowStr) {
+          fragment.appendChild(createKey(char));
         }
+        
         if (i === 2) {
-          rowDiv.appendChild(createKey('Backspace', 'wide'));
+          fragment.appendChild(createKey('Backspace', 'wide'));
         }
+        
+        rowDiv.appendChild(fragment);
       });
     }
 
@@ -93,46 +529,376 @@
       return key;
     }
 
-    function attachHandlers() {
+    // Event Handling
+    function attachEventHandlers() {
       document.onkeydown = e => handleKey(e.key);
+      elements.newGameBtn.addEventListener('click', startGame);
+      elements.reviewBtn.addEventListener('click', showReview);
+      elements.solverBtn.addEventListener('click', showSolverSuggestion);
+      elements.playAgainBtn.addEventListener('click', startGame);
+      document.getElementById('modalPlayAgainBtn').addEventListener('click', () => {
+        elements.reviewModal.style.display = 'none';
+        startGame();
+      });
+      elements.closeModal.addEventListener('click', () => {
+        elements.reviewModal.style.display = 'none';
+      });
+      window.addEventListener('click', (e) => {
+        if (e.target === elements.reviewModal) {
+          elements.reviewModal.style.display = 'none';
+        }
+      });
     }
 
+    // Game Logic
     function handleKey(key) {
-      if (currentRow >= MAX_ROWS) return;
-      const row = grid.children[currentRow];
+      if (!gameState.isGameActive) return;
+      if (gameState.currentRow >= MAX_ROWS) return;
+      
+      const row = elements.grid.children[gameState.currentRow];
+      if (!row) return;
+      
       if (key === 'Backspace') {
-        if (currentCol > 0) {
-          currentCol--; const cell = row.children[currentCol];
-          cell.textContent = '';
-          cell.classList.remove('filled');
-        }
+        handleBackspace(row);
       } else if (key === 'Enter') {
-        if (currentCol === COLS) processGuess(row);
+        if (gameState.currentCol === COLS) processGuess(row);
       } else if (/^[a-zA-Z]$/.test(key)) {
-        if (currentCol < COLS) {
-          const cell = row.children[currentCol];
-          cell.textContent = key.toUpperCase();
-          cell.classList.add('filled');
-          currentCol++;
-        }
+        handleLetter(key, row);
       }
     }
 
-    function processGuess(row) {
-      let guess = '';
-      for (let i = 0; i < COLS; i++) guess += row.children[i].textContent.toLowerCase();
-      if (!WORDS.includes(guess)) { alert('Not in word list'); return; }
-      const answerArr = ANSWER.split('');
-      const guessArr = guess.split('');
-      const result = Array(COLS).fill('absent');
-      for (let i = 0; i < COLS; i++) if (guessArr[i] === answerArr[i]) { result[i] = 'correct'; answerArr[i] = null; }
-      for (let i = 0; i < COLS; i++) if (result[i] !== 'correct') {
-        const idx = answerArr.indexOf(guessArr[i]); if (idx !== -1) { result[i] = 'present'; answerArr[idx] = null; }
+    function handleBackspace(row) {
+      if (gameState.currentCol > 0) {
+        gameState.currentCol--;
+        const cell = row.children[gameState.currentCol];
+        cell.textContent = '';
+        cell.classList.remove('filled');
       }
-      for (let i = 0; i < COLS; i++) row.children[i].classList.add(result[i]);
-      if (guess === ANSWER) { setTimeout(() => alert('You Win!'), 10); currentRow = MAX_ROWS; return; }
-      currentRow++; currentCol = 0;
     }
+
+    function handleLetter(key, row) {
+      if (gameState.currentCol < COLS) {
+        const cell = row.children[gameState.currentCol];
+        cell.textContent = key.toUpperCase();
+        cell.classList.add('filled');
+        gameState.currentCol++;
+      }
+    }
+
+    // Word Processing
+    function processGuess(row) {
+      try {
+        const guess = getCurrentGuess(row);
+        if (!isValidGuess(guess)) return;
+        
+        const result = evaluateGuess(guess);
+        updateGrid(row, result);
+        updateGameState(guess, result);
+        
+        if (isGameOver(guess)) {
+          endGame();
+        }
+      } catch (error) {
+        console.error('Error processing guess:', error);
+        elements.gameStatus.textContent = 'Error processing guess. Please try again.';
+      }
+    }
+
+    function getCurrentGuess(row) {
+      return Array.from(row.children)
+        .map(cell => cell.textContent.toLowerCase())
+        .join('');
+    }
+
+    function isValidGuess(guess) {
+      if (!gameState.words.includes(guess)) {
+        elements.gameStatus.textContent = ERROR_MESSAGES.INVALID_GUESS;
+        return false;
+      }
+      return true;
+    }
+
+    function evaluateGuess(guess) {
+      const answerArr = gameState.answer.split('');
+      const guessArr = guess.split('');
+      const result = Array(COLS).fill(LETTER_STATES.ABSENT);
+      
+      // Check for correct letters
+      for (let i = 0; i < COLS; i++) {
+        if (guessArr[i] === answerArr[i]) {
+          result[i] = LETTER_STATES.CORRECT;
+          answerArr[i] = null;
+        }
+      }
+      
+      // Check for present letters
+      for (let i = 0; i < COLS; i++) {
+        if (result[i] !== LETTER_STATES.CORRECT) {
+          const idx = answerArr.indexOf(guessArr[i]);
+          if (idx !== -1) {
+            result[i] = LETTER_STATES.PRESENT;
+            answerArr[idx] = null;
+          }
+        }
+      }
+      
+      return result;
+    }
+
+    function updateGrid(row, result) {
+      Array.from(row.children).forEach((cell, i) => {
+        cell.classList.add(result[i]);
+      });
+    }
+
+    function updateGameState(guess, result) {
+      try {
+        gameState.remainingWords = filterWords(guess, result);
+        gameState.history.push({
+          guess: guess.toUpperCase(),
+          result: result,
+          remainingWords: [...gameState.remainingWords]
+        });
+        document.querySelector('.solver-suggestion')?.remove();
+      } catch (error) {
+        console.error('Error updating game state:', error);
+      }
+    }
+
+    function isGameOver(guess) {
+      if (guess === gameState.answer) {
+        elements.gameStatus.textContent = 'You Win!';
+        return true;
+      }
+      gameState.currentRow++;
+      gameState.currentCol = 0;
+      if (gameState.currentRow >= MAX_ROWS) {
+        elements.gameStatus.textContent = 'Game Over!';
+        return true;
+      }
+      return false;
+    }
+
+    function endGame() {
+      gameState.currentRow = MAX_ROWS;
+      gameState.isGameActive = false;
+      elements.reviewBtn.style.display = 'inline-block';
+      elements.solverBtn.style.display = 'none';
+      elements.playAgainBtn.style.display = 'inline-block';
+    }
+
+    // Word Filtering
+    function filterWords(guess, result) {
+      return gameState.remainingWords.filter(word => {
+        const wordArr = word.split('');
+        const guessArr = guess.toLowerCase().split('');
+        
+        for (let i = 0; i < COLS; i++) {
+          if (result[i] === LETTER_STATES.CORRECT) {
+            if (wordArr[i] !== guessArr[i]) return false;
+          } else if (result[i] === LETTER_STATES.PRESENT) {
+            if (!wordArr.includes(guessArr[i]) || wordArr[i] === guessArr[i]) return false;
+          } else if (result[i] === LETTER_STATES.ABSENT) {
+            if (wordArr[i] === guessArr[i]) return false;
+            
+            const letterCount = guessArr.filter((l, idx) => 
+              (result[idx] === LETTER_STATES.CORRECT || result[idx] === LETTER_STATES.PRESENT) && l === guessArr[i]
+            ).length;
+            
+            if (letterCount > 0) {
+              if (wordArr[i] === guessArr[i]) return false;
+            } else {
+              if (wordArr.includes(guessArr[i])) return false;
+            }
+          }
+        }
+        return true;
+      });
+    }
+
+    // Solver Logic
+    function calculateLetterFrequencies(words) {
+      if (!words || words.length === 0) return;
+      
+      gameState.letterFrequencies.position = Array(COLS).fill({});
+      gameState.letterFrequencies.overall = {};
+
+      words.forEach(word => {
+        if (!word || word.length !== COLS) return;
+        const letters = word.split('');
+        letters.forEach((letter, pos) => {
+          gameState.letterFrequencies.position[pos][letter] = 
+            (gameState.letterFrequencies.position[pos][letter] || 0) + 1;
+          gameState.letterFrequencies.overall[letter] = 
+            (gameState.letterFrequencies.overall[letter] || 0) + 1;
+        });
+      });
+    }
+
+    function getWordScore(word) {
+      const letters = word.split('');
+      let score = 0;
+      const usedLetters = new Set();
+
+      letters.forEach((letter, pos) => {
+        score += (gameState.letterFrequencies.position[pos][letter] || 0) * 2;
+        
+        if (!usedLetters.has(letter)) {
+          score += (gameState.letterFrequencies.overall[letter] || 0);
+          usedLetters.add(letter);
+        }
+      });
+
+      return score;
+    }
+
+    function simulateBestGuess(remainingWords, actualGuess) {
+      if (!remainingWords || remainingWords.length === 0) return null;
+      
+      calculateLetterFrequencies(remainingWords);
+
+      if (remainingWords.length <= 2) {
+        return remainingWords[0];
+      }
+
+      const wordScores = gameState.words
+        .filter(word => word && word.length === COLS)
+        .map(word => ({
+          word,
+          score: getWordScore(word)
+        }));
+
+      if (wordScores.length === 0) return null;
+
+      wordScores.sort((a, b) => b.score - a.score);
+      
+      const actualGuessScore = wordScores.find(w => w.word === actualGuess)?.score || 0;
+      const bestScore = wordScores[0].score;
+      
+      if (actualGuessScore >= bestScore * 0.9) {
+        return actualGuess;
+      }
+      
+      return wordScores[0].word;
+    }
+
+    function showSolverSuggestion() {
+      if (!gameState.isGameActive) {
+        elements.gameStatus.textContent = ERROR_MESSAGES.GAME_NOT_STARTED;
+        return;
+      }
+
+      const bestGuess = simulateBestGuess(gameState.remainingWords, '');
+      if (!bestGuess) {
+        elements.gameStatus.textContent = 'Unable to suggest a guess.';
+        return;
+      }
+
+      let suggestion = document.querySelector('.solver-suggestion');
+      if (!suggestion) {
+        suggestion = document.createElement('div');
+        suggestion.className = 'solver-suggestion';
+        document.querySelector('#buttonContainer').insertAdjacentElement('beforebegin', suggestion);
+      }
+
+      suggestion.innerHTML = `
+        <strong>Suggested guess:</strong> ${bestGuess.toUpperCase()}
+        <br>
+        <small>Based on ${gameState.remainingWords.length} possible words</small>
+      `;
+    }
+
+    // Review Logic
+    function showReview() {
+      if (!gameState.history || gameState.history.length === 0) {
+        elements.gameStatus.textContent = ERROR_MESSAGES.NO_HISTORY;
+        return;
+      }
+
+      try {
+        elements.guessHistory.innerHTML = '';
+        
+        let simulatedRemainingWords = [...gameState.words];
+        const bestGuesses = [];
+        
+        gameState.history.forEach(guess => {
+          const bestGuess = simulateBestGuess(simulatedRemainingWords, guess.guess.toLowerCase());
+          bestGuesses.push(bestGuess || guess.guess.toLowerCase());
+          simulatedRemainingWords = filterWords(guess.guess.toLowerCase(), guess.result);
+        });
+        
+        const fragment = document.createDocumentFragment();
+        gameState.history.forEach((guess, index) => {
+          const guessItem = createGuessItem(guess, index, bestGuesses[index]);
+          fragment.appendChild(guessItem);
+        });
+        
+        elements.guessHistory.appendChild(fragment);
+        updateReviewSummary();
+        elements.reviewModal.style.display = 'block';
+      } catch (error) {
+        console.error('Error showing review:', error);
+        elements.gameStatus.textContent = 'Error showing review. Please try again.';
+      }
+    }
+
+    function createGuessItem(guess, index, bestGuess) {
+      const guessItem = document.createElement('div');
+      guessItem.className = 'guess-item';
+      
+      const isOptimal = bestGuess.toLowerCase() === guess.guess.toLowerCase();
+      const scoreDiff = Math.abs(getWordScore(bestGuess) - getWordScore(guess.guess.toLowerCase()));
+      const isClose = scoreDiff <= getWordScore(bestGuess) * 0.1;
+      
+      guessItem.innerHTML = `
+        <div class="guess-header">
+          <div class="guess-number">Guess ${index + 1}</div>
+          <div class="guess-grid">
+            ${Array.from({length: COLS}, (_, i) => `
+              <div class="guess-cell ${guess.result[i]}">${guess.guess[i]}</div>
+            `).join('')}
+          </div>
+          <div class="guess-result ${guess.guess === gameState.answer.toUpperCase() ? 'correct' : 'incorrect'}">
+            ${guess.guess === gameState.answer.toUpperCase() ? 'Correct!' : 'Incorrect'}
+          </div>
+        </div>
+        <div class="guess-analysis">
+          <div class="guess-comparison">
+            <div class="user-guess">
+              <div class="label">Your Guess</div>
+              <div class="word">${guess.guess}</div>
+              ${isOptimal ? 
+                '<div class="optimal">✓ Optimal Choice!</div>' : 
+                isClose ? 
+                '<div class="optimal">✓ Good Choice!</div>' :
+                '<div class="suboptimal">Could be improved</div>'
+              }
+            </div>
+            <div class="best-guess">
+              <div class="label">Best Possible Guess</div>
+              <div class="word">${bestGuess.toUpperCase()}</div>
+              <div class="word-count">${guess.remainingWords.length} words remain</div>
+            </div>
+          </div>
+          <div class="remaining-words">
+            <div class="word-count">Remaining Possible Words:</div>
+            <div class="possible-words">${guess.remainingWords.slice(0, 10).join(', ')}${guess.remainingWords.length > 10 ? '...' : ''}</div>
+          </div>
+        </div>
+      `;
+      
+      return guessItem;
+    }
+
+    function updateReviewSummary() {
+      elements.reviewAnswer.textContent = gameState.answer.toUpperCase();
+      elements.reviewAttempts.textContent = gameState.history.length;
+      elements.reviewResult.textContent = 
+        gameState.history[gameState.history.length - 1].guess === gameState.answer.toUpperCase() ? 'Win' : 'Loss';
+    }
+
+    // Initialize Game
+    loadWordList();
   </script>
 </body>
 </html>
