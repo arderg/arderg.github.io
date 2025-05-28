@@ -50,6 +50,7 @@ export class GameUI {
     }
 
     buildKeyboard() {
+        const BACKSPACE = '\u232B';  // ⌫
         // Create all keyboard elements in a single pass
         const keyboardHTML = this.KEYBOARD_LAYOUT.map((rowStr, i) => {
             const keys = rowStr.split('').map(char => 
@@ -60,7 +61,7 @@ export class GameUI {
                 <div class="key-row" id="row${i+1}">
                     ${i === 2 ? '<div class="key wide" data-key="Enter">Enter</div>' : ''}
                     ${keys}
-                    ${i === 2 ? '<div class="key wide" data-key="Backspace">Backspace</div>' : ''}
+                    ${i === 2 ? `<div class="key wide backspace" data-key="Backspace" aria-label="Backspace">${BACKSPACE}</div>` : ''}
                 </div>
             `;
         }).join('');
@@ -87,17 +88,12 @@ export class GameUI {
                                        keyElement.classList.contains('present') ? 'present' :
                                        keyElement.classList.contains('absent') ? 'absent' : null;
                     
-                    // Only update if the new state is better than the current state
-                    if (state === LETTER_STATES.CORRECT || 
-                        (state === LETTER_STATES.PRESENT && currentState !== 'correct') ||
-                        (state === LETTER_STATES.ABSENT && !currentState)) {
-                        // Remove existing state classes
-                        keyElement.classList.remove('absent', 'present', 'correct');
-                        
-                        // Add new state class
-                        if (state) {
-                            keyElement.classList.add(state);
-                        }
+                    // Remove existing state classes
+                    keyElement.classList.remove('absent', 'present', 'correct');
+                    
+                    // Add new state class if it exists
+                    if (state) {
+                        keyElement.classList.add(state);
                     }
                 }
             });
