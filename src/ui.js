@@ -22,40 +22,51 @@ export class GameUI {
     }
 
     buildGrid() {
+        // Create all rows and cells in a single DocumentFragment
         const fragment = document.createDocumentFragment();
+        const rows = [];
+        
+        // Create all rows first
         for (let r = 0; r < ROWS; r++) {
             const row = document.createElement('div');
             row.className = 'row';
-            for (let c = 0; c < COLS; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                row.appendChild(cell);
-            }
+            rows.push(row);
             fragment.appendChild(row);
         }
+        
+        // Create all cells in a single pass
+        const cells = [];
+        for (let c = 0; c < COLS; c++) {
+            for (let r = 0; r < ROWS; r++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cells.push(cell);
+                rows[r].appendChild(cell);
+            }
+        }
+        
+        // Single DOM update
         this.elements.grid.appendChild(fragment);
     }
 
     buildKeyboard() {
-        this.KEYBOARD_LAYOUT.forEach((rowStr, i) => {
-            const rowDiv = document.getElementById('row' + (i+1));
-            rowDiv.innerHTML = '';
+        // Create all keyboard elements in a single pass
+        const keyboardHTML = this.KEYBOARD_LAYOUT.map((rowStr, i) => {
+            const keys = rowStr.split('').map(char => 
+                `<div class="key" data-key="${char}">${char}</div>`
+            ).join('');
             
-            const fragment = document.createDocumentFragment();
-            if (i === 2) {
-                fragment.appendChild(this.createKey('Enter', 'wide'));
-            }
-            
-            for (const char of rowStr) {
-                fragment.appendChild(this.createKey(char));
-            }
-            
-            if (i === 2) {
-                fragment.appendChild(this.createKey('Backspace', 'wide'));
-            }
-            
-            rowDiv.appendChild(fragment);
-        });
+            return `
+                <div class="key-row" id="row${i+1}">
+                    ${i === 2 ? '<div class="key wide" data-key="Enter">Enter</div>' : ''}
+                    ${keys}
+                    ${i === 2 ? '<div class="key wide" data-key="Backspace">Backspace</div>' : ''}
+                </div>
+            `;
+        }).join('');
+        
+        // Single DOM update
+        this.elements.keyboard.innerHTML = keyboardHTML;
     }
 
     createKey(label, extraClass='') {
@@ -67,23 +78,39 @@ export class GameUI {
     }
 
     updateKeyboardUI(keyboardState) {
-        Object.entries(keyboardState).forEach(([letter, state]) => {
-            const keyElement = document.querySelector(`.key[data-key="${letter}"]`);
-            if (keyElement) {
-                // Remove existing state classes
-                keyElement.classList.remove('gray', 'yellow', 'green');
-                
-                // Add new state class if any
-                if (state) {
-                    keyElement.classList.add(state);
+        // Batch keyboard updates using requestAnimationFrame
+        requestAnimationFrame(() => {
+            Object.entries(keyboardState).forEach(([letter, state]) => {
+                const keyElement = document.querySelector(`.key[data-key="${letter}"]`);
+                if (keyElement) {
+                    const currentState = keyElement.classList.contains('correct') ? 'correct' :
+                                       keyElement.classList.contains('present') ? 'present' :
+                                       keyElement.classList.contains('absent') ? 'absent' : null;
+                    
+                    // Only update if the new state is better than the current state
+                    if (state === LETTER_STATES.CORRECT || 
+                        (state === LETTER_STATES.PRESENT && currentState !== 'correct') ||
+                        (state === LETTER_STATES.ABSENT && !currentState)) {
+                        // Remove existing state classes
+                        keyElement.classList.remove('absent', 'present', 'correct');
+                        
+                        // Add new state class
+                        if (state) {
+                            keyElement.classList.add(state);
+                        }
+                    }
                 }
-            }
+            });
         });
     }
 
     updateGrid(row, result) {
-        Array.from(row.children).forEach((cell, i) => {
-            cell.classList.add(result[i]);
+        // Batch class updates using requestAnimationFrame
+        requestAnimationFrame(() => {
+            const cells = Array.from(row.children);
+            cells.forEach((cell, i) => {
+                cell.classList.add(result[i]);
+            });
         });
     }
 
@@ -200,6 +227,11 @@ export class GameUI {
         this.elements.gameStatus.textContent = 'Practice Mode - Try to guess the word!';
         this.elements.reviewBtn.style.display = 'none';
         this.elements.playAgainBtn.style.display = 'none';
+        
+        // Reset keyboard state
+        document.querySelectorAll('.key').forEach(key => {
+            key.classList.remove('absent', 'present', 'correct');
+        });
     }
 
     showGameOver(isWin) {

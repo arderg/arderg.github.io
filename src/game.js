@@ -22,59 +22,86 @@ export class GameState {
         this.hardMode = false;
         this.keyboardState = {};
         this.bestGuesses = []; // Store best guesses for each move
+        this.knownGreens = {}; // Track fixed green letters: {position: letter}
+        this.requiredYellows = new Set(); // Track required yellow letters
     }
 
     initKeyboardState() {
-        this.keyboardState = {};
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
-            this.keyboardState[letter] = null;
-        });
+        this.keyboardState = Object.fromEntries(
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => [letter, null])
+        );
     }
 
     updateKeyboardState(guess, feedback) {
         const guessArr = guess.toUpperCase().split('');
         
+        // First, mark all letters in the guess as absent
+        guessArr.forEach(letter => {
+            if (this.keyboardState[letter] === null) {
+                this.keyboardState[letter] = LETTER_STATES.ABSENT;
+            }
+        });
+        
+        // Then update with the actual feedback
         guessArr.forEach((letter, index) => {
             const currentState = this.keyboardState[letter];
             const newState = feedback[index];
             
-            // Only upgrade the state (gray -> yellow -> green)
-            if (currentState === null || 
-                (currentState === LETTER_STATES.ABSENT && newState !== LETTER_STATES.ABSENT) ||
-                (currentState === LETTER_STATES.PRESENT && newState === LETTER_STATES.CORRECT)) {
+            // Only upgrade the state (absent -> present -> correct)
+            if (currentState === LETTER_STATES.ABSENT && newState !== LETTER_STATES.ABSENT) {
+                this.keyboardState[letter] = newState;
+            } else if (currentState === LETTER_STATES.PRESENT && newState === LETTER_STATES.CORRECT) {
                 this.keyboardState[letter] = newState;
             }
         });
     }
 
     reset(hardMode = false) {
-        this.currentRow = 0;
-        this.currentCol = 0;
-        this.history = [];
-        this.bestGuesses = []; // Reset best guesses
-        this.isGameActive = false;
-        this.hardMode = hardMode;
+        // Batch state updates
+        Object.assign(this, {
+            currentRow: 0,
+            currentCol: 0,
+            history: [],
+            bestGuesses: [],
+            isGameActive: false,
+            hardMode: hardMode,
+            knownGreens: {},
+            requiredYellows: new Set()
+        });
         
         if (!this.solver) {
             throw new Error('Solver not initialized');
         }
         
-        this.solver.reset(hardMode);
-        this.initKeyboardState();
-        
-        if (this.currentRow === 0) {
-            const randomIndex = Math.floor(Math.random() * this.answers.length);
-            this.answer = this.answers[randomIndex];
-            if (!this.answer) {
-                throw new Error('Failed to select a valid word');
+        // Initialize solver and keyboard state in parallel
+        Promise.all([
+            new Promise(resolve => {
+                this.solver.reset(hardMode);
+                resolve();
+            }),
+            new Promise(resolve => {
+                this.initKeyboardState();
+                resolve();
+            })
+        ]).then(() => {
+            if (this.currentRow === 0) {
+                // Select answer and compute initial guesses in a separate task
+                setTimeout(() => {
+                    const randomIndex = Math.floor(Math.random() * this.answers.length);
+                    this.answer = this.answers[randomIndex];
+                    if (!this.answer) {
+                        throw new Error('Failed to select a valid word');
+                    }
+                    
+                    // Compute initial best guesses
+                    const initialGuesses = this.solver.getTopGuesses();
+                    if (!initialGuesses || initialGuesses.length === 0) {
+                        throw new Error('Failed to compute initial guesses');
+                    }
+                    this.bestGuesses.push(initialGuesses);
+                }, 0);
             }
-            // Compute initial best guesses
-            const initialGuesses = this.solver.getTopGuesses();
-            if (!initialGuesses || initialGuesses.length === 0) {
-                throw new Error('Failed to compute initial guesses');
-            }
-            this.bestGuesses.push(initialGuesses);
-        }
+        });
     }
 
     evaluateGuess(guess) {
@@ -109,7 +136,47 @@ export class GameState {
             return { valid: false, error: 'Not in word list!' };
         }
 
+        // Check hard mode constraints
+        if (this.hardMode) {
+            // Check green letters
+            for (const [pos, letter] of Object.entries(this.knownGreens)) {
+                if (guess[pos] !== letter) {
+                    return { 
+                        valid: false, 
+                        error: `Hard mode: Letter ${letter} must be in position ${parseInt(pos) + 1}` 
+                    };
+                }
+            }
+
+            // Check yellow letters
+            for (const letter of this.requiredYellows) {
+                if (!guess.includes(letter)) {
+                    return { 
+                        valid: false, 
+                        error: `Hard mode: Must use revealed letter ${letter}` 
+                    };
+                }
+            }
+        }
+
         const result = this.evaluateGuess(guess);
+        
+        // Update known hints for hard mode
+        if (this.hardMode) {
+            // Update green letters
+            for (let i = 0; i < result.length; i++) {
+                if (result[i] === LETTER_STATES.CORRECT) {
+                    this.knownGreens[i] = guess[i];
+                }
+            }
+            
+            // Update yellow letters
+            for (let i = 0; i < result.length; i++) {
+                if (result[i] === LETTER_STATES.PRESENT) {
+                    this.requiredYellows.add(guess[i]);
+                }
+            }
+        }
         
         // Store current best guesses before updating solver state
         const currentBestGuesses = this.bestGuesses[this.currentRow] || [];

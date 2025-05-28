@@ -24,28 +24,47 @@ class Game {
     }
 
     async loadWordLists() {
-        const [wordsResponse, answersResponse] = await Promise.all([
-            fetch('data/words.txt'),
-            fetch('data/answers.txt')
-        ]);
-        
-        if (!wordsResponse.ok || !answersResponse.ok) {
-            throw new Error('Failed to load word lists');
+        try {
+            this.ui.showError('Loading game data...');
+            
+            // Load both word lists in parallel
+            const [wordsResponse, answersResponse] = await Promise.all([
+                fetch('data/words.txt'),
+                fetch('data/answers.txt')
+            ]);
+            
+            if (!wordsResponse.ok || !answersResponse.ok) {
+                throw new Error('Failed to load word lists');
+            }
+            
+            // Parse responses in parallel
+            const [wordsText, answersText] = await Promise.all([
+                wordsResponse.text(),
+                answersResponse.text()
+            ]);
+            
+            // Process word lists in a separate task to avoid blocking
+            setTimeout(() => {
+                const words = wordsText.split(/\r?\n/).filter(w => w.length === 5);
+                const answers = answersText.split(/\r?\n/).filter(w => w.length === 5);
+                
+                if (words.length === 0 || answers.length === 0) {
+                    throw new Error('No valid words found');
+                }
+                
+                this.gameState.words = words;
+                this.gameState.answers = answers;
+                this.gameState.solver = new WordleSolver(words, answers);
+                
+                // Enable UI after data is loaded
+                this.ui.elements.newGameBtn.disabled = false;
+                this.ui.showError('Click "New Game" to start!');
+            }, 0);
+            
+        } catch (error) {
+            console.error('Error loading word lists:', error);
+            this.ui.showError('Error loading game data. Please refresh the page.');
         }
-        
-        const wordsText = await wordsResponse.text();
-        const answersText = await answersResponse.text();
-        
-        const words = wordsText.split(/\r?\n/).filter(w => w.length === 5);
-        const answers = answersText.split(/\r?\n/).filter(w => w.length === 5);
-        
-        if (words.length === 0 || answers.length === 0) {
-            throw new Error('No valid words found');
-        }
-        
-        this.gameState.words = words;
-        this.gameState.answers = answers;
-        this.gameState.solver = new WordleSolver(words, answers);
     }
 
     startGame() {
