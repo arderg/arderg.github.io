@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Generates a feedback pattern for a Wordle guess against an answer.
  * @param {string} guess - The guessed word

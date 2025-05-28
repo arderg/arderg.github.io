@@ -1,3 +1,5 @@
+"use strict";
+
 import { GameState } from './game.js';
 import { GameUI } from './ui.js';
 import { WordleSolver } from './solver.js';

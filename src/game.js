@@ -1,3 +1,5 @@
+"use strict";
+
 import { WordleSolver } from './solver.js';
 
 // Game Constants

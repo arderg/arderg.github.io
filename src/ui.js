@@ -1,3 +1,5 @@
+"use strict";
+
 import { ROWS, COLS, LETTER_STATES } from './game.js';
 
 export class GameUI {

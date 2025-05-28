@@ -1,3 +1,5 @@
+"use strict";
+
 import { getFeedbackPattern } from './feedbackUtils.js';
 import { findBestGuess, scoreGuess } from './guessScorer.js';
 
