@@ -15,9 +15,9 @@ class Game {
             this.startGame();
         } catch (error) {
             console.error('Error initializing game:', error);
-            this.ui.showError('Error loading word lists. Using default words.');
-            this.gameState.words = ['apple','berry','mango'];
-            this.gameState.answers = ['apple','berry','mango'];
+            // Use default words if loading fails
+            this.gameState.words = ['apple', 'berry', 'mango', 'peach', 'grape'];
+            this.gameState.answers = ['apple', 'berry', 'mango', 'peach', 'grape'];
             this.gameState.solver = new WordleSolver(this.gameState.words, this.gameState.answers);
             this.startGame();
         }
@@ -29,12 +29,12 @@ class Game {
             
             // Load both word lists in parallel
             const [wordsResponse, answersResponse] = await Promise.all([
-                fetch('data/words.txt'),
-                fetch('data/answers.txt')
+                fetch('./data/words.txt'),
+                fetch('./data/answers.txt')
             ]);
             
             if (!wordsResponse.ok || !answersResponse.ok) {
-                throw new Error('Failed to load word lists');
+                throw new Error(`Failed to load word lists: ${wordsResponse.ok ? 'answers.txt' : 'words.txt'} not found`);
             }
             
             // Parse responses in parallel
@@ -43,41 +43,68 @@ class Game {
                 answersResponse.text()
             ]);
             
-            // Process word lists in a separate task to avoid blocking
-            setTimeout(() => {
-                const words = wordsText.split(/\r?\n/).filter(w => w.length === 5);
-                const answers = answersText.split(/\r?\n/).filter(w => w.length === 5);
-                
-                if (words.length === 0 || answers.length === 0) {
-                    throw new Error('No valid words found');
-                }
-                
-                this.gameState.words = words;
-                this.gameState.answers = answers;
-                this.gameState.solver = new WordleSolver(words, answers);
-                
-                // Enable UI after data is loaded
-                this.ui.elements.newGameBtn.disabled = false;
-                this.ui.showError('Click "New Game" to start!');
-            }, 0);
+            const words = wordsText.split(/\r?\n/).filter(w => w.length === 5);
+            const answers = answersText.split(/\r?\n/).filter(w => w.length === 5);
+            
+            if (words.length === 0 || answers.length === 0) {
+                throw new Error('No valid words found in word lists');
+            }
+            
+            // Initialize game state
+            this.gameState.words = words;
+            this.gameState.answers = answers;
+            this.gameState.solver = new WordleSolver(words, answers);
+            
+            // Enable UI after data is loaded
+            this.ui.elements.newGameBtn.disabled = false;
+            this.ui.showError('Click "New Game" to start!');
+            
+            // Start the game automatically after loading
+            this.startGame();
             
         } catch (error) {
             console.error('Error loading word lists:', error);
-            this.ui.showError('Error loading game data. Please refresh the page.');
+            this.ui.showError(`Error loading game data: ${error.message}`);
+            throw error; // Re-throw to be caught by init()
         }
     }
 
     startGame() {
         try {
             const hardMode = this.ui.elements.hardModeToggle.checked;
+            
+            // Check if solver is initialized
+            if (!this.gameState.solver) {
+                throw new Error('Solver not initialized. Please refresh the page.');
+            }
+            
+            // Check if word lists are loaded
+            if (!this.gameState.words || !this.gameState.answers || 
+                this.gameState.words.length === 0 || this.gameState.answers.length === 0) {
+                throw new Error('Word lists not loaded. Please refresh the page.');
+            }
+            
             this.gameState.reset(hardMode);
             this.ui.resetUI();
             this.ui.buildGrid();
             this.ui.buildKeyboard();
+            
+            // Set up keyboard click listeners after building the keyboard
+            document.querySelectorAll('.key').forEach(key => {
+                key.addEventListener('click', () => this.handleKey(key.textContent));
+            });
+            
             this.gameState.isGameActive = true;
+            
+            // Show hard mode status message if enabled
+            if (hardMode) {
+                this.ui.showError('Hard Mode: You must use all revealed hints in your guesses!');
+            } else {
+                this.ui.showError('Click "New Game" to start!');
+            }
         } catch (error) {
             console.error('Error starting game:', error);
-            this.ui.showError('Error starting game. Please refresh the page.');
+            this.ui.showError(`Error starting game: ${error.message}`);
         }
     }
 
@@ -88,7 +115,6 @@ class Game {
         // Button clicks
         this.ui.elements.newGameBtn.addEventListener('click', () => this.startGame());
         this.ui.elements.reviewBtn.addEventListener('click', () => this.ui.showReview(this.gameState));
-        this.ui.elements.playAgainBtn.addEventListener('click', () => this.startGame());
         
         // Hard mode toggle
         this.ui.elements.hardModeToggle.addEventListener('change', () => {
@@ -110,11 +136,6 @@ class Game {
                 this.ui.elements.reviewModal.style.display = 'none';
             }
         });
-
-        // Keyboard clicks
-        document.querySelectorAll('.key').forEach(key => {
-            key.addEventListener('click', () => this.handleKey(key.textContent));
-        });
     }
 
     handleKey(key) {
@@ -124,7 +145,7 @@ class Game {
         const row = this.ui.elements.grid.children[this.gameState.currentRow];
         if (!row) return;
         
-        if (key === 'Backspace') {
+        if (key === 'Backspace' || key === '⌫') {
             this.handleBackspace(row);
         } else if (key === 'Enter') {
             if (this.gameState.currentCol === 5) this.processGuess(row);
@@ -137,8 +158,10 @@ class Game {
         if (this.gameState.currentCol > 0) {
             this.gameState.currentCol--;
             const cell = row.children[this.gameState.currentCol];
-            cell.textContent = '';
-            cell.classList.remove('filled');
+            if (cell) {
+                cell.textContent = '';
+                cell.classList.remove('filled');
+            }
         }
     }
 

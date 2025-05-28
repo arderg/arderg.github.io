@@ -57,6 +57,9 @@ export class GameState {
     }
 
     reset(hardMode = false) {
+        // Set hard mode state synchronously first
+        this.hardMode = hardMode;
+        
         // Batch state updates
         Object.assign(this, {
             currentRow: 0,
@@ -64,9 +67,9 @@ export class GameState {
             history: [],
             bestGuesses: [],
             isGameActive: false,
-            hardMode: hardMode,
             knownGreens: {},
-            requiredYellows: new Set()
+            requiredYellows: new Set(),
+            keyboardState: {} // Reset keyboard state
         });
         
         if (!this.solver) {

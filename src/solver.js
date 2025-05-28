@@ -119,8 +119,53 @@ export class WordleSolver {
             return [...this.remainingCandidates];
         }
 
+        // Filter out words that don't respect hard mode constraints
+        const validGuesses = this.hardMode ? 
+            this.allWords.filter(guess => {
+                // Check against all previous guesses
+                for (const { guess: prevGuess, feedback: prevFeedback } of this.guessHistory) {
+                    // Check green letters (must be in same position)
+                    for (let pos = 0; pos < prevGuess.length; pos++) {
+                        if (prevFeedback[pos] === 'correct' && guess[pos] !== prevGuess[pos]) {
+                            return false;
+                        }
+                    }
+                    
+                    // Check yellow letters (must be present but not in same position)
+                    for (let pos = 0; pos < prevGuess.length; pos++) {
+                        if (prevFeedback[pos] === 'present') {
+                            const letter = prevGuess[pos];
+                            if (!guess.includes(letter) || guess[pos] === letter) {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Check gray letters (must not appear unless it was a duplicate)
+                    for (let pos = 0; pos < prevGuess.length; pos++) {
+                        if (prevFeedback[pos] === 'absent') {
+                            const letter = prevGuess[pos];
+                            // Count how many times this letter appears in the original guess
+                            const letterCount = prevGuess.split('').filter(l => l === letter).length;
+                            // Count how many times this letter appears in positions marked correct or present
+                            const usedCount = prevGuess.split('').filter((l, i) => 
+                                l === letter && (prevFeedback[i] === 'correct' || prevFeedback[i] === 'present')
+                            ).length;
+                            
+                            // If all instances of this letter were used in correct/present positions,
+                            // then it shouldn't appear in the word
+                            if (usedCount === letterCount && guess.includes(letter)) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }) :
+            this.allWords;
+
         // Score all possible guesses
-        const scoredGuesses = this.allWords.map(guess => ({
+        const scoredGuesses = validGuesses.map(guess => ({
             word: guess,
             score: scoreGuess(guess, this.remainingCandidates)
         }));

@@ -223,8 +223,12 @@
       font-size: 2rem; 
       text-transform: uppercase; 
       color: var(--text);
+      transform-origin: center;
     }
-    .cell.filled { border-color: var(--border); }
+    .cell.filled { 
+      border-color: var(--border);
+      animation: cellPress 0.2s ease;
+    }
     .correct { background-color: var(--correct-bg); color: white; }
     .present { background-color: var(--present-bg); color: white; }
     .absent { background-color: var(--absent-bg); color: white; }
@@ -263,8 +267,12 @@
       justify-content: center;
       transition: all 0.2s ease;
       box-sizing: border-box;
+      transform-origin: center;
     }
-    .key:active { background: #bbb; }
+    .key:active { 
+      background: #bbb;
+      animation: keyPress 0.2s ease;
+    }
     .key.wide { 
       width: 3.75rem;
     }
@@ -666,6 +674,18 @@
         --keyboard-padding: 0.25rem;
       }
     }
+
+    @keyframes keyPress {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes cellPress {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
@@ -703,12 +723,6 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <h2>Game Review</h2>
-      
-      <div class="review-section">
-        <h3>Guess History</h3>
-        <div id="guessHistory" class="guess-history"></div>
-      </div>
-
       <div class="game-summary">
         <div class="summary-item">
           <h4>Answer</h4>
@@ -723,10 +737,8 @@
           <p id="reviewResult"></p>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <button id="modalPlayAgainBtn" class="game-button">Play Again</button>
-      </div>
+      <div id="guessHistory" class="guess-history"></div>
+      <button id="modalPlayAgainBtn" class="game-button">Play Again</button>
     </div>
   </div>
 

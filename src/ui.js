@@ -220,9 +220,16 @@ export class GameUI {
 
     resetUI() {
         this.elements.grid.innerHTML = '';
-        this.elements.gameStatus.textContent = 'Practice Mode - Try to guess the word!';
-        this.elements.reviewBtn.style.display = 'none';
-        this.elements.playAgainBtn.style.display = 'none';
+        const isHardMode = this.elements.hardModeToggle.checked;
+        this.elements.gameStatus.textContent = isHardMode ? 'Hard Mode - Use all revealed hints!' : 'Practice Mode - Try to guess the word!';
+        
+        // Add null checks for elements that might not exist
+        if (this.elements.reviewBtn) {
+            this.elements.reviewBtn.style.display = 'none';
+        }
+        if (this.elements.playAgainBtn) {
+            this.elements.playAgainBtn.style.display = 'none';
+        }
         
         // Reset keyboard state
         document.querySelectorAll('.key').forEach(key => {
@@ -232,8 +239,12 @@ export class GameUI {
 
     showGameOver(isWin) {
         this.elements.gameStatus.textContent = isWin ? 'You Win!' : 'Game Over!';
-        this.elements.reviewBtn.style.display = 'inline-block';
-        this.elements.playAgainBtn.style.display = 'inline-block';
+        if (this.elements.reviewBtn) {
+            this.elements.reviewBtn.style.display = 'inline-block';
+        }
+        if (this.elements.playAgainBtn) {
+            this.elements.playAgainBtn.style.display = 'inline-block';
+        }
     }
 
     showError(message) {
