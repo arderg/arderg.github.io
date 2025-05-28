@@ -19,23 +19,6 @@ A minimal Wordle-style game built with plain HTML, CSS, and JavaScript.
 
 ---
 
-## Demo
-
-![Mini Wordle Demo](./demo.gif)  
-*Play it live on* [GitHub Pages](https://arderg.github.io/) *(Wordle portion only).*
-
----
-
-## Installation
-
-1. Clone this repository:  
-   ```bash
-   git clone https://github.com/arderg/arderg.github.io.git
-
-2. Open `index.html` in your browser (desktop recommended).
-
----
-
 ## Usage
 
 1. Click **Start Game**.
