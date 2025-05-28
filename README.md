@@ -4,7 +4,6 @@ A minimal Wordle-style game built with plain HTML, CSS, and JavaScript.
 
 ## Table of Contents
 
-- [Demo](#demo)  
 - [Installation](#installation)  
 - [Usage](#usage)  
 - [Project Report](#project-report)  
