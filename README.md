@@ -1,4 +1,3 @@
-````markdown
 # Mini Wordle
 
 A minimal Wordle-style game built with plain HTML, CSS, and JavaScript.
@@ -32,7 +31,6 @@ A minimal Wordle-style game built with plain HTML, CSS, and JavaScript.
 1. Clone this repository:  
    ```bash
    git clone https://github.com/arderg/arderg.github.io.git
-````
 
 2. Open `index.html` in your browser (desktop recommended).
 
